@@ -12,5 +12,6 @@ urlpatterns = [
     url('', include(router.urls)),
     path('landsat2/',views.LandsatPostView.as_view(),name='landsat2'),
     path('landsat3/',views.LandsatNdviView.as_view(),name='landsat3'),
+    path('landsat4/',views.LandsatCalculateIndex.as_view(),name='landsat4')
 ]
 

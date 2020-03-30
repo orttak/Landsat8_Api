@@ -24,6 +24,8 @@ from rio_color.operations import parse_operations
 import numpy
 from osgeo import gdal,gdalnumeric,osr,ogr
 from dotenv import load_dotenv
+import uuid
+
 
 #load .env variable
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -78,6 +80,7 @@ class LandsatPostView(APIView):
         return Response((selected_images))
 
 class LandsatNdviView(APIView):
+
     # NDVI calculation class. We aim to develop this class to more flexible 
     # according to different indices which user's define    
     def createDownloadPath(self,download_path,ImageproductID):
@@ -177,7 +180,7 @@ class LandsatNdviView(APIView):
                 red_toa_name = 'TOA_'+img['productid']+'_B4.TIF'
                 nir_toa_name = 'TOA_'+img['productid']+'_B5.TIF'
                 
-                #calculate toa imagges
+                #calculate toa images
                 red_toa=self.create_toa(red,image_dir+red_toa_name,mtl)
                 nir_toa=self.create_toa(nir,image_dir+nir_toa_name,mtl)
 
@@ -190,6 +193,7 @@ class LandsatNdviView(APIView):
                 ndvi=self.calculate_ndvi(red_path=red_toa,nir_path=nir_toa,output_path=ndvi_path+ndvi_name)        
             else:
                 continue
+        '''
         # Pust the data to geoserver, we use geoserver rest-api library
         from geoserver.catalog import Catalog
         GEOSERVER_URL=os.getenv('GEOSERVER_URL')
@@ -204,7 +208,22 @@ class LandsatNdviView(APIView):
         #path, filename = os.path.split(output_path)
         cat.create_imagemosaic(output_folder,GEOSERVER_DATADIR+output_folder+'/ndvi',
         configure='all',workspace=output_folder)
-
+        '''
         return Response(output_folder+':ndvi')
+
+from . import task
+class LandsatCalculateIndex(APIView):
+    
+    def get (self,request,format=None):
+        # Main function of  LandsatNdviView class
+        body_unicode = request.body.decode('utf-8')
+        body = json.loads(body_unicode)        
+        #print(output)
+        output_folder=task.defineindex.delay(body)
+        
+        return Response('your process has started')
+    
+    
+
 
 
